@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Play, Sparkles, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { runProbe } from "@/lib/api/probe.functions";
@@ -35,6 +35,22 @@ function NewTest() {
   const [temperature, setTemperature] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("promptprobe.prefill");
+      if (!raw) return;
+      sessionStorage.removeItem("promptprobe.prefill");
+      const p = JSON.parse(raw) as {
+        system?: string; user?: string; model?: string; temperature?: number; runs?: number;
+      };
+      if (p.system != null) setSystem(p.system);
+      if (p.user != null) setUser(p.user);
+      if (p.model) setModel(p.model as typeof model);
+      if (typeof p.temperature === "number") setTemperature(p.temperature);
+      if (typeof p.runs === "number") setRuns(p.runs);
+    } catch { /* ignore */ }
+  }, []);
 
   function loadExample(name: string) {
     const ex = EXAMPLES.find((e) => e.name === name);
