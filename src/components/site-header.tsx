@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Repeat2, History, Plus } from "lucide-react";
+import { History, Plus } from "lucide-react";
+import logoUrl from "@/assets/promptprobe-logo.png";
+
 
 export function SiteHeader() {
   return (
