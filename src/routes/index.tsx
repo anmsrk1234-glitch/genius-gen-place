@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck } from "lucide-react";
+import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 
 export const Route = createFileRoute("/")({
