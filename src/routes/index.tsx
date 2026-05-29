@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import logoUrl from "@/assets/promptprobe-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,8 +29,8 @@ function Index() {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-5 pb-24 pt-16">
         <section className="flex flex-col items-center text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/60 ring-1 ring-primary/30 shadow-glow">
-            <Repeat2 className="h-7 w-7 text-primary" />
+          <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/60 ring-1 ring-primary/30 shadow-glow">
+            <img src={logoUrl} alt="PromptProbe logo" className="h-14 w-14 object-contain" />
           </span>
           <h1 className="mt-7 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
             Does your prompt give the{" "}
