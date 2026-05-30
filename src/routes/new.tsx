@@ -198,7 +198,7 @@ function NewTest() {
                 <select
                   id="model"
                   value={model}
-                  onChange={(e) => setModel(e.target.value as typeof model)}
+                  onChange={(e) => onModelChange(e.target.value as typeof model)}
                   className="mt-2 w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 >
                   {MODEL_OPTIONS.map((m) => (
@@ -244,7 +244,7 @@ function NewTest() {
                 min={2}
                 max={10}
                 value={runs}
-                onChange={(e) => setRuns(Number(e.target.value))}
+                onChange={(e) => onRunsChange(Number(e.target.value))}
                 className="mt-3 w-full accent-[oklch(0.72_0.19_295)]"
               />
               <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
