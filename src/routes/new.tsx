@@ -38,6 +38,7 @@ function NewTest() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    track("page_view");
     try {
       const raw = sessionStorage.getItem("promptprobe.prefill");
       if (!raw) return;
@@ -52,6 +53,16 @@ function NewTest() {
       if (typeof p.runs === "number") setRuns(p.runs);
     } catch { /* ignore */ }
   }, []);
+
+  function onModelChange(v: typeof model) {
+    setModel(v);
+    track("model_selected", { model: v });
+  }
+
+  function onRunsChange(v: number) {
+    setRuns(v);
+    track("run_count_changed", { run_count: v });
+  }
 
   function loadExample(name: string) {
     const ex = EXAMPLES.find((e) => e.name === name);
