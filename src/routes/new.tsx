@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Play, Sparkles, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { runProbe } from "@/lib/api/probe.functions";
+import { track } from "@/lib/analytics";
 import {
   EXAMPLES,
   MODEL_OPTIONS,
