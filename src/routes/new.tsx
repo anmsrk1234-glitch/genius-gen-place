@@ -76,6 +76,11 @@ function NewTest() {
     if (!user.trim() || loading) return;
     setError(null);
     setLoading(true);
+    track("prompt_test_started", {
+      model,
+      run_count: runs,
+      prompt_length: user.length,
+    });
     try {
       const result = await probe({
         data: { systemPrompt: system, userPrompt: user, runs, model, temperature },
@@ -93,6 +98,12 @@ function NewTest() {
         temperature: result.temperature,
         runs: result.runs,
         score,
+      });
+      track("prompt_test_completed", {
+        model: result.model,
+        run_count: runs,
+        reliability_score: score,
+        prompt_length: user.length,
       });
       navigate({ to: "/test/$id", params: { id } });
     } catch (err) {
