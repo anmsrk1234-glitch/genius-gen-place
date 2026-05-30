@@ -26,6 +26,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  useEffect(() => {
+    track("page_view");
+  }, []);
   return (
     <div className="min-h-screen">
       <SiteHeader />
