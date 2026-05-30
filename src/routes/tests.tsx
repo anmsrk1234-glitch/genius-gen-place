@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, History, Trash2, Plus } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { deleteTest, loadTests, type StoredTest } from "@/lib/probe-utils";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/tests")({
   head: () => ({
@@ -24,6 +25,7 @@ function TestsPage() {
   const [tests, setTests] = useState<StoredTest[] | null>(null);
 
   useEffect(() => {
+    track("page_view");
     setTests(loadTests());
   }, []);
 
