@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import logoUrl from "@/assets/promptprobe-logo.png";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
