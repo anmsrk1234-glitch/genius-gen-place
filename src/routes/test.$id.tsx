@@ -16,6 +16,7 @@ import {
   recommendation,
   type StoredTest,
 } from "@/lib/probe-utils";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/test/$id")({
   head: () => ({
@@ -42,6 +43,7 @@ function TestDetail() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   useEffect(() => {
+    track("page_view");
     const t = getTest(id);
     setTest(t ?? null);
   }, [id]);

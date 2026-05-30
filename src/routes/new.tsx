@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Play, Sparkles, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { runProbe } from "@/lib/api/probe.functions";
+import { track } from "@/lib/analytics";
 import {
   EXAMPLES,
   MODEL_OPTIONS,
@@ -37,6 +38,7 @@ function NewTest() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    track("page_view");
     try {
       const raw = sessionStorage.getItem("promptprobe.prefill");
       if (!raw) return;
@@ -52,6 +54,16 @@ function NewTest() {
     } catch { /* ignore */ }
   }, []);
 
+  function onModelChange(v: typeof model) {
+    setModel(v);
+    track("model_selected", { model: v });
+  }
+
+  function onRunsChange(v: number) {
+    setRuns(v);
+    track("run_count_changed", { run_count: v });
+  }
+
   function loadExample(name: string) {
     const ex = EXAMPLES.find((e) => e.name === name);
     if (!ex) return;
@@ -64,6 +76,11 @@ function NewTest() {
     if (!user.trim() || loading) return;
     setError(null);
     setLoading(true);
+    track("prompt_test_started", {
+      model,
+      run_count: runs,
+      prompt_length: user.length,
+    });
     try {
       const result = await probe({
         data: { systemPrompt: system, userPrompt: user, runs, model, temperature },
@@ -81,6 +98,12 @@ function NewTest() {
         temperature: result.temperature,
         runs: result.runs,
         score,
+      });
+      track("prompt_test_completed", {
+        model: result.model,
+        run_count: runs,
+        reliability_score: score,
+        prompt_length: user.length,
       });
       navigate({ to: "/test/$id", params: { id } });
     } catch (err) {
@@ -175,7 +198,7 @@ function NewTest() {
                 <select
                   id="model"
                   value={model}
-                  onChange={(e) => setModel(e.target.value as typeof model)}
+                  onChange={(e) => onModelChange(e.target.value as typeof model)}
                   className="mt-2 w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 >
                   {MODEL_OPTIONS.map((m) => (
@@ -221,7 +244,7 @@ function NewTest() {
                 min={2}
                 max={10}
                 value={runs}
-                onChange={(e) => setRuns(Number(e.target.value))}
+                onChange={(e) => onRunsChange(Number(e.target.value))}
                 className="mt-3 w-full accent-[oklch(0.72_0.19_295)]"
               />
               <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
