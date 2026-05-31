@@ -47,6 +47,7 @@ function TestDetail() {
     const t = getTest(id);
     setTest(t ?? null);
   }, [id]);
+  
 
   const baseOutput = test?.runs.find((r) => !r.error && r.output)?.output ?? "";
   const hasErrors = !!test?.runs.some((r) => r.error);
@@ -190,7 +191,7 @@ function TestDetail() {
             <div>
               <p className="label-caps text-muted-foreground">Reliability score</p>
               <p className="mt-1 text-sm leading-relaxed text-foreground">
-                Average token-overlap similarity across every pair of outputs.
+                Measures word-level consistency between runs. Creative prompts naturally score lower.
               </p>
             </div>
           </div>

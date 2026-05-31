@@ -33,7 +33,7 @@ function NewTest() {
   const [model, setModel] = useState<(typeof MODEL_OPTIONS)[number]["value"]>(
     "google/gemini-2.5-flash",
   );
-  const [temperature, setTemperature] = useState(1);
+  const [temperature, setTemperature] = useState(0.2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -242,7 +242,7 @@ function NewTest() {
                 id="runs"
                 type="range"
                 min={2}
-                max={10}
+                max={6}
                 value={runs}
                 onChange={(e) => onRunsChange(Number(e.target.value))}
                 className="mt-3 w-full accent-[oklch(0.72_0.19_295)]"

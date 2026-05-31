@@ -88,22 +88,22 @@ export function recommendation(score: number, hasErrors: boolean): {
     };
   }
   if (score >= 85)
-    return {
-      label: "Ship it",
+     return {
+       label: "Highly consistent",
       tone: "good",
-      detail: "Outputs are highly consistent across runs.",
+      detail: "Outputs remain very similar across runs.",
     };
   if (score >= 60)
     return {
-      label: "Tighten the prompt",
-      tone: "warn",
-      detail: "Noticeable drift. Add format constraints, examples, or lower temperature.",
+     label: "Moderate variance",
+     tone: "warn",
+     detail: "Outputs vary between runs. Review whether the variation is acceptable for your use case.",
+   };
+     return {
+      label: "High variance",
+      tone: "bad",
+      detail: "Outputs differ significantly between runs. Structured automation workflows may require a more constrained prompt.",
     };
-  return {
-    label: "Not ready",
-    tone: "bad",
-    detail: "High variance. This prompt is risky to run at scale.",
-  };
 }
 
 // Word-level diff highlights (token-by-token vs the first output).

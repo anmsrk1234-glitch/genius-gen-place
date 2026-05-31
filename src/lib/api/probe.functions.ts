@@ -13,7 +13,7 @@ const MODELS = [
 const inputSchema = z.object({
   systemPrompt: z.string().max(8000).optional().default(""),
   userPrompt: z.string().min(1).max(8000),
-  runs: z.number().int().min(2).max(10),
+  runs: z.number().int().min(2).max(6),
   model: z.enum(MODELS).default("google/gemini-2.5-flash"),
   temperature: z.number().min(0).max(2).default(1),
 });
@@ -44,17 +44,18 @@ async function callOnce(args: {
   messages.push({ role: "user", content: args.userPrompt });
 
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${args.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: args.model,
+       model: args.model,
         messages,
         temperature: args.temperature,
-      }),
+        max_tokens: 500,
+      })
     });
     const ms = Date.now() - start;
     if (!res.ok) {
@@ -74,9 +75,8 @@ async function callOnce(args: {
 export const runProbe = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data }): Promise<ProbeResult> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured.");
-
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured.");
     // Run in parallel — each call is independent and zero-cached server-side.
     const promises = Array.from({ length: data.runs }, (_, i) =>
       callOnce({
