@@ -76,6 +76,7 @@ export const runProbe = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data }): Promise<ProbeResult> => {
     const apiKey = process.env.OPENROUTER_API_KEY;
+    console.log("OPENROUTER KEY FOUND:", !!process.env.OPENROUTER_API_KEY);
     if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured.");
     // Run in parallel — each call is independent and zero-cached server-side.
     const promises = Array.from({ length: data.runs }, (_, i) =>
