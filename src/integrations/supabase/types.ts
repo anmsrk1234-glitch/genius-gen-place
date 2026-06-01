@@ -55,7 +55,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_promptprobe_analytics: { Args: { admin_key: string }; Returns: Json }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
