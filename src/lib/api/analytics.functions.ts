@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const EVENT_NAMES = [
   "page_view",
@@ -20,10 +19,40 @@ const eventSchema = z.object({
   session_id: z.string().max(80).optional().nullable(),
 });
 
-export const trackEvent = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => eventSchema.parse(d))
-  .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("analytics_events").insert({
+type AnalyticsRow = {
+  created_at: string;
+  event_name: string;
+  model: string | null;
+  run_count: number | null;
+  reliability_score: number | null;
+  session_id: string | null;
+};
+
+function getSupabasePublicConfig() {
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error("Missing backend publishable environment variable(s).");
+  }
+
+  return { url: url.replace(/\/$/, ""), key };
+}
+
+async function insertAnalyticsEvent(data: z.infer<typeof eventSchema>) {
+  const { url, key } = getSupabasePublicConfig();
+  const response = await fetch(`${url}/rest/v1/analytics_events`, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
       event_name: data.event_name,
       model: data.model ?? null,
       run_count: data.run_count ?? null,
@@ -31,9 +60,45 @@ export const trackEvent = createServerFn({ method: "POST" })
       prompt_length: data.prompt_length ?? null,
       path: data.path ?? null,
       session_id: data.session_id ?? null,
-    });
-    if (error) {
-      console.error("[analytics] insert failed:", error.message);
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+}
+
+async function fetchAnalyticsRows(adminKey: string): Promise<AnalyticsRow[]> {
+  const { url, key } = getSupabasePublicConfig();
+  const params = new URLSearchParams({
+    select: "event_name,model,run_count,reliability_score,session_id,created_at",
+    order: "created_at.desc",
+    limit: "10000",
+  });
+  const response = await fetch(`${url}/rest/v1/analytics_events?${params}`, {
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "x-admin-analytics-key": adminKey,
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    if (response.status === 401 || response.status === 403) throw new Error("Unauthorized");
+    throw new Error(message || "Failed to load analytics.");
+  }
+
+  return (await response.json()) as AnalyticsRow[];
+}
+
+export const trackEvent = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => eventSchema.parse(d))
+  .handler(async ({ data }) => {
+    try {
+      await insertAnalyticsEvent(data);
+    } catch (error) {
+      console.error("[analytics] insert failed:", error instanceof Error ? error.message : error);
       return { ok: false };
     }
     return { ok: true };
@@ -62,18 +127,7 @@ export type AnalyticsStats = {
 export const getAnalyticsStats = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => statsInput.parse(d))
   .handler(async ({ data }): Promise<AnalyticsStats> => {
-    const expected = process.env.ADMIN_ANALYTICS_KEY;
-    if (!expected) throw new Error("ADMIN_ANALYTICS_KEY not configured.");
-    if (data.key !== expected) throw new Error("Unauthorized");
-
-    const { data: rows, error } = await supabaseAdmin
-      .from("analytics_events")
-      .select("event_name, model, run_count, reliability_score, session_id, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10000);
-
-    if (error) throw new Error(error.message);
-    const events = rows ?? [];
+    const events = await fetchAnalyticsRows(data.key);
 
     const sessions = new Set<string>();
     let pageViews = 0;
