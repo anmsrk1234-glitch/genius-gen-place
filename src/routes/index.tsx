@@ -32,20 +32,20 @@ function Index() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-5 pb-24 pt-16">
+      <main className="mx-auto max-w-6xl px-5 pb-24 pt-6 md:pt-16">
         <section className="flex flex-col items-center text-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/60 ring-1 ring-primary/30 shadow-glow">
-            <img src={logoUrl} alt="PromptProbe logo" className="h-14 w-14 object-contain" />
+          <span className="flex h-14 w-14 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-accent/60 ring-1 ring-primary/30 shadow-glow">
+            <img src={logoUrl} alt="PromptProbe logo" className="h-10 w-10 md:h-14 md:w-14 object-contain" />
           </span>
-          <h1 className="mt-7 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="mt-4 md:mt-7 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
             Does your prompt give the{" "}
             <span className="text-gradient">same answer every time?</span>
           </h1>
-          <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mt-3 md:mt-5 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-lg">
             Run any prompt multiple times and instantly catch output drift before it breaks
             your automation or ships inconsistent responses.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="mt-5 md:mt-8 flex flex-col items-center gap-3">
             <Link
               to="/new"
               className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition hover:brightness-110"
