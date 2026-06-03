@@ -2,11 +2,7 @@
 
 export const MODEL_OPTIONS = [
   { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", hint: "Fast · default" },
-  { value: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite", hint: "Cheapest" },
   { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", hint: "Top reasoning" },
-  { value: "openai/gpt-5-mini", label: "GPT-5 Mini", hint: "Balanced" },
-  { value: "openai/gpt-5-nano", label: "GPT-5 Nano", hint: "Fast" },
-  { value: "openai/gpt-5", label: "GPT-5", hint: "Highest quality" },
 ] as const;
 
 export const EXAMPLES: { name: string; system?: string; user: string }[] = [
