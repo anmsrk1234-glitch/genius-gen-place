@@ -3,11 +3,7 @@ import { z } from "zod";
 
 const MODELS = [
   "google/gemini-2.5-flash",
-  "google/gemini-2.5-flash-lite",
   "google/gemini-2.5-pro",
-  "openai/gpt-5-mini",
-  "openai/gpt-5-nano",
-  "openai/gpt-5",
 ] as const;
 
 const inputSchema = z.object({
