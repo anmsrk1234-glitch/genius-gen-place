@@ -42,6 +42,40 @@ function getSupabasePublicConfig() {
   return { url: url.replace(/\/$/, ""), key };
 }
 
+function getSupabaseServiceConfig() {
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Missing backend service environment variable(s).");
+  }
+
+  return { url: url.replace(/\/$/, ""), key };
+}
+
+function verifyAdminKey(providedKey: string) {
+  const expectedKey = process.env.ADMIN_ANALYTICS_KEY;
+
+  if (!expectedKey) {
+    console.error("[analytics] ADMIN_ANALYTICS_KEY is not configured.");
+    throw new Error("Analytics admin key is not configured.");
+  }
+
+  const provided = providedKey.trim();
+  const expected = expectedKey.trim();
+
+  let mismatch = provided.length === expected.length ? 0 : 1;
+  const maxLength = Math.max(provided.length, expected.length);
+
+  for (let i = 0; i < maxLength; i += 1) {
+    mismatch |= (provided.charCodeAt(i) || 0) ^ (expected.charCodeAt(i) || 0);
+  }
+
+  if (mismatch !== 0) {
+    throw new Error("Unauthorized");
+  }
+}
+
 async function insertAnalyticsEvent(data: z.infer<typeof eventSchema>) {
   const { url, key } = getSupabasePublicConfig();
   const response = await fetch(`${url}/rest/v1/analytics_events`, {
@@ -69,15 +103,20 @@ async function insertAnalyticsEvent(data: z.infer<typeof eventSchema>) {
 }
 
 async function fetchAnalyticsRows(adminKey: string): Promise<AnalyticsRow[]> {
-  const { url, key } = getSupabasePublicConfig();
-  const response = await fetch(`${url}/rest/v1/rpc/get_analytics_events`, {
-    method: "POST",
+  verifyAdminKey(adminKey);
+
+  const { url, key } = getSupabaseServiceConfig();
+  const params = new URLSearchParams({
+    select: "created_at,event_name,model,run_count,reliability_score,session_id",
+    order: "created_at.desc",
+    limit: "10000",
+  });
+  const response = await fetch(`${url}/rest/v1/analytics_events?${params.toString()}`, {
+    method: "GET",
     headers: {
       apikey: key,
       Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ _admin_key: adminKey }),
   });
 
   if (!response.ok) {
