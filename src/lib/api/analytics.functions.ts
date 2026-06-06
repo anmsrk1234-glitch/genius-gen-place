@@ -69,27 +69,28 @@ async function insertAnalyticsEvent(data: z.infer<typeof eventSchema>) {
 }
 
 async function fetchAnalyticsRows(adminKey: string): Promise<AnalyticsRow[]> {
-  const { url, key } = getSupabasePublicConfig();
-  const params = new URLSearchParams({
-    select: "event_name,model,run_count,reliability_score,session_id,created_at",
-    order: "created_at.desc",
-    limit: "10000",
-  });
-  const response = await fetch(`${url}/rest/v1/analytics_events?${params}`, {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "x-admin-analytics-key": adminKey,
-    },
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    if (response.status === 401 || response.status === 403) throw new Error("Unauthorized");
-    throw new Error(message || "Failed to load analytics.");
+  const expected = process.env.ADMIN_ANALYTICS_KEY;
+  if (!expected) {
+    console.error("[analytics] ADMIN_ANALYTICS_KEY is not configured.");
+    throw new Error("Analytics not configured.");
+  }
+  if (adminKey !== expected) {
+    throw new Error("Unauthorized");
   }
 
-  return (await response.json()) as AnalyticsRow[];
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("analytics_events")
+    .select("event_name,model,run_count,reliability_score,session_id,created_at")
+    .order("created_at", { ascending: false })
+    .limit(10000);
+
+  if (error) {
+    console.error("[analytics] read failed:", error.message);
+    throw new Error(error.message || "Failed to load analytics.");
+  }
+
+  return (data ?? []) as AnalyticsRow[];
 }
 
 export const trackEvent = createServerFn({ method: "POST" })
