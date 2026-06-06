@@ -55,7 +55,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_analytics_events: {
+        Args: { _admin_key: string }
+        Returns: {
+          created_at: string
+          event_name: string
+          model: string
+          reliability_score: number
+          run_count: number
+          session_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
