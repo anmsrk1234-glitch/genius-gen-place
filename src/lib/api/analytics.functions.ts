@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 const EVENT_NAMES = [
@@ -62,10 +61,17 @@ function verifyAdminKey(providedKey: string) {
     throw new Error("Analytics admin key is not configured.");
   }
 
-  const provided = Buffer.from(providedKey.trim());
-  const expected = Buffer.from(expectedKey.trim());
+  const provided = providedKey.trim();
+  const expected = expectedKey.trim();
 
-  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+  let mismatch = provided.length === expected.length ? 0 : 1;
+  const maxLength = Math.max(provided.length, expected.length);
+
+  for (let i = 0; i < maxLength; i += 1) {
+    mismatch |= (provided.charCodeAt(i) || 0) ^ (expected.charCodeAt(i) || 0);
+  }
+
+  if (mismatch !== 0) {
     throw new Error("Unauthorized");
   }
 }
