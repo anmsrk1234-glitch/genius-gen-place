@@ -17,6 +17,7 @@ import {
   type StoredTest,
 } from "@/lib/probe-utils";
 import { track } from "@/lib/analytics";
+import { FeedbackPrompt } from "@/components/feedback-prompt";
 
 export const Route = createFileRoute("/test/$id")({
   head: () => ({
@@ -309,6 +310,8 @@ function TestDetail() {
             })}
           </div>
         </section>
+
+        <FeedbackPrompt runId={test.id} />
       </main>
     </div>
   );
