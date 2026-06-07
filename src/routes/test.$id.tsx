@@ -310,6 +310,8 @@ function TestDetail() {
             })}
           </div>
         </section>
+
+        <FeedbackPrompt runId={test.id} />
       </main>
     </div>
   );
