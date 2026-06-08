@@ -59,19 +59,32 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
       }),
     });
     const ms = Date.now() - start;
+    const rawText = await res.text().catch(() => "");
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      return {
-        output: "",
-        ms,
-        error: friendlyError(res.status, text || res.statusText),
-      };
+      console.error("[ai-provider] non-ok", res.status, rawText.slice(0, 800));
+      return { output: "", ms, error: friendlyError(res.status, rawText || res.statusText) };
     }
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const output = data.choices?.[0]?.message?.content ?? "";
-    return { output, ms };
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error("[ai-provider] non-JSON response:", rawText.slice(0, 800));
+      return { output: "", ms, error: `Provider returned non-JSON: ${rawText.slice(0, 200)}` };
+    }
+    console.log("[ai-provider] response shape:", JSON.stringify(data).slice(0, 1200));
+
+    const output = extractOutput(data);
+    if (output && output.trim()) return { output, ms };
+
+    const finish = data?.choices?.[0]?.finish_reason;
+    const providerErr =
+      (typeof data?.error === "string" && data.error) ||
+      data?.error?.message ||
+      data?.message ||
+      (finish === "length" && "Response truncated (max_tokens reached). Try increasing max_tokens.") ||
+      (finish && `Provider returned empty content (finish_reason: ${finish}).`) ||
+      `Empty response. Raw: ${JSON.stringify(data).slice(0, 300)}`;
+    return { output: "", ms, error: String(providerErr) };
   } catch (e) {
     return {
       output: "",
@@ -79,6 +92,32 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
       error: `Network error: ${(e as Error).message}`,
     };
   }
+}
+
+function extractOutput(data: any): string {
+  if (!data) return "";
+  const choice = data.choices?.[0];
+  const msg = choice?.message;
+  // Standard OpenAI shape
+  if (typeof msg?.content === "string" && msg.content) return msg.content;
+  // Array-of-parts shape (Anthropic/Gemini-style passthrough)
+  if (Array.isArray(msg?.content)) {
+    const joined = msg.content
+      .map((p: any) => (typeof p === "string" ? p : p?.text ?? p?.content ?? ""))
+      .filter(Boolean)
+      .join("");
+    if (joined) return joined;
+  }
+  // Reasoning models sometimes use reasoning_content
+  if (typeof msg?.reasoning_content === "string" && msg.reasoning_content) return msg.reasoning_content;
+  // Completions-style fallback
+  if (typeof choice?.text === "string" && choice.text) return choice.text;
+  // Gemini-passthrough shape
+  const geminiText = data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).filter(Boolean).join("");
+  if (geminiText) return geminiText;
+  // Tool calls only — surface a hint
+  if (msg?.tool_calls?.length) return JSON.stringify(msg.tool_calls);
+  return "";
 }
 
 function friendlyError(status: number, body: string): string {
