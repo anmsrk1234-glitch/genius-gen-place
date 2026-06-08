@@ -126,7 +126,15 @@ export type StoredTest = {
   userPrompt: string;
   model: string;
   temperature: number;
-  runs: { index: number; output: string; ms: number; error?: string }[];
+  runs: {
+    index: number;
+    output: string;
+    ms: number;
+    error?: string;
+    finishReason?: string;
+    truncated?: boolean;
+    usage?: { input?: number; output?: number; total?: number };
+  }[];
   score: number;
 };
 

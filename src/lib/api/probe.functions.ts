@@ -20,6 +20,9 @@ export type ProbeRun = {
   output: string;
   ms: number;
   error?: string;
+  finishReason?: string;
+  truncated?: boolean;
+  usage?: { input?: number; output?: number; total?: number };
 };
 
 export type ProbeResult = {
@@ -38,6 +41,7 @@ export const runProbe = createServerFn({ method: "POST" })
     messages.push({ role: "user", content: data.userPrompt });
 
     // Run in parallel — each call is independent and zero-cached server-side.
+    // No auto-budgeting: rely on DEFAULT_MAX_TOKENS (1000) for reliable, complete outputs.
     const promises = Array.from({ length: data.runs }, (_, i) =>
       chatCompletion({
         model: data.model,

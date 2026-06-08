@@ -37,6 +37,15 @@ function toneClasses(tone: "good" | "warn" | "bad") {
   return "border-destructive/40 bg-destructive/10 text-destructive";
 }
 
+function Meta({ label, value }: { label: string; value: string | number | undefined }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[9px] uppercase tracking-wider opacity-70">{label}</span>
+      <span className="font-mono text-foreground/90">{value ?? "—"}</span>
+    </div>
+  );
+}
+
 function TestDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -281,12 +290,18 @@ function TestDetail() {
                     </div>
                   </header>
                   <div className="max-h-[420px] overflow-auto px-4 py-3.5">
+                    {r.truncated && (
+                      <div className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>Response was truncated. Consider increasing the token limit.</span>
+                      </div>
+                    )}
                     {r.error ? (
                       <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
                         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>{r.error}</span>
+                        <span className="whitespace-pre-wrap break-words">{r.error}</span>
                       </div>
-                    ) : parts ? (
+                    ) : parts && r.output ? (
                       <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/95">
                         {parts.map((p, i) =>
                           p.changed ? (
@@ -302,9 +317,16 @@ function TestDetail() {
                         )}
                       </pre>
                     ) : (
-                      <p className="text-sm text-muted-foreground italic">Empty response</p>
+                      <p className="text-sm italic text-muted-foreground">No content returned.</p>
                     )}
                   </div>
+                  <footer className="grid grid-cols-2 gap-x-4 gap-y-1 border-t border-border/60 px-4 py-2.5 text-[11px] text-muted-foreground sm:grid-cols-5">
+                    <Meta label="Input" value={r.usage?.input} />
+                    <Meta label="Output" value={r.usage?.output} />
+                    <Meta label="Total" value={r.usage?.total} />
+                    <Meta label="Finish" value={r.finishReason ?? "—"} />
+                    <Meta label="Time" value={`${r.ms} ms`} />
+                  </footer>
                 </article>
               );
             })}

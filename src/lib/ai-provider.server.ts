@@ -17,6 +17,10 @@ const PROVIDER_CONFIG: ProviderConfig = {
   apiKeyEnv: "AICREDITS_API_KEY",
 };
 
+// Default max output tokens. Tuned for reliability over cost: we'd rather pay
+// for a complete answer than show users a truncated one.
+export const DEFAULT_MAX_TOKENS = 1000;
+
 export function getProviderApiKey(): string {
   const key = process.env[PROVIDER_CONFIG.apiKeyEnv];
   if (!key) {
@@ -35,10 +39,19 @@ export type ChatCompletionInput = {
   apiKey: string;
 };
 
+export type TokenUsage = {
+  input?: number;
+  output?: number;
+  total?: number;
+};
+
 export type ChatCompletionResult = {
   output: string;
   ms: number;
   error?: string;
+  finishReason?: string;
+  usage?: TokenUsage;
+  truncated?: boolean;
 };
 
 export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCompletionResult> {
@@ -55,36 +68,42 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
         model: input.model,
         messages: input.messages,
         temperature: input.temperature,
-        max_tokens: input.maxTokens ?? 500,
+        max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       }),
     });
     const ms = Date.now() - start;
     const rawText = await res.text().catch(() => "");
     if (!res.ok) {
-      console.error("[ai-provider] non-ok", res.status, rawText.slice(0, 800));
+      console.error("[ai-provider] non-ok", res.status, rawText.slice(0, 1200));
       return { output: "", ms, error: friendlyError(res.status, rawText || res.statusText) };
     }
     let data: any;
     try {
       data = JSON.parse(rawText);
     } catch {
-      console.error("[ai-provider] non-JSON response:", rawText.slice(0, 800));
-      return { output: "", ms, error: `Provider returned non-JSON: ${rawText.slice(0, 200)}` };
+      console.error("[ai-provider] non-JSON response:", rawText.slice(0, 1200));
+      return { output: "", ms, error: `Provider returned non-JSON: ${rawText.slice(0, 300)}` };
     }
-    console.log("[ai-provider] response shape:", JSON.stringify(data).slice(0, 1200));
 
+    const finishReason: string | undefined = data?.choices?.[0]?.finish_reason;
+    const usage = extractUsage(data);
+    const truncated = finishReason === "length" || finishReason === "max_tokens";
     const output = extractOutput(data);
-    if (output && output.trim()) return { output, ms };
 
-    const finish = data?.choices?.[0]?.finish_reason;
+    if (output && output.trim()) {
+      return { output, ms, finishReason, usage, truncated };
+    }
+
+    // Empty output — surface the real reason, never a generic "Empty response".
+    console.error("[ai-provider] empty output. Full response:", JSON.stringify(data).slice(0, 2000));
     const providerErr =
       (typeof data?.error === "string" && data.error) ||
       data?.error?.message ||
       data?.message ||
-      (finish === "length" && "Response truncated (max_tokens reached). Try increasing max_tokens.") ||
-      (finish && `Provider returned empty content (finish_reason: ${finish}).`) ||
-      `Empty response. Raw: ${JSON.stringify(data).slice(0, 300)}`;
-    return { output: "", ms, error: String(providerErr) };
+      (truncated && "Response was truncated before any content was produced. Increase the token limit.") ||
+      (finishReason && `Provider returned no content (finish_reason: ${finishReason}).`) ||
+      `Provider returned no content. Raw: ${JSON.stringify(data).slice(0, 400)}`;
+    return { output: "", ms, error: String(providerErr), finishReason, usage, truncated };
   } catch (e) {
     return {
       output: "",
@@ -94,13 +113,21 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
   }
 }
 
+function extractUsage(data: any): TokenUsage | undefined {
+  const u = data?.usage;
+  if (!u) return undefined;
+  const input = u.prompt_tokens ?? u.input_tokens;
+  const output = u.completion_tokens ?? u.output_tokens;
+  const total = u.total_tokens ?? (typeof input === "number" && typeof output === "number" ? input + output : undefined);
+  if (input == null && output == null && total == null) return undefined;
+  return { input, output, total };
+}
+
 function extractOutput(data: any): string {
   if (!data) return "";
   const choice = data.choices?.[0];
   const msg = choice?.message;
-  // Standard OpenAI shape
   if (typeof msg?.content === "string" && msg.content) return msg.content;
-  // Array-of-parts shape (Anthropic/Gemini-style passthrough)
   if (Array.isArray(msg?.content)) {
     const joined = msg.content
       .map((p: any) => (typeof p === "string" ? p : p?.text ?? p?.content ?? ""))
@@ -108,14 +135,10 @@ function extractOutput(data: any): string {
       .join("");
     if (joined) return joined;
   }
-  // Reasoning models sometimes use reasoning_content
   if (typeof msg?.reasoning_content === "string" && msg.reasoning_content) return msg.reasoning_content;
-  // Completions-style fallback
   if (typeof choice?.text === "string" && choice.text) return choice.text;
-  // Gemini-passthrough shape
   const geminiText = data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).filter(Boolean).join("");
   if (geminiText) return geminiText;
-  // Tool calls only — surface a hint
   if (msg?.tool_calls?.length) return JSON.stringify(msg.tool_calls);
   return "";
 }
@@ -125,6 +148,6 @@ function friendlyError(status: number, body: string): string {
   if (status === 402) return "AI credits exhausted. Top up your AIcredits account to continue.";
   if (status === 429) return "Rate limited by the AI provider. Please wait a moment and try again.";
   if (status >= 500) return "AI provider is temporarily unavailable. Please retry shortly.";
-  const snippet = body.slice(0, 200);
+  const snippet = body.slice(0, 300);
   return `AI request failed (${status})${snippet ? `: ${snippet}` : ""}`;
 }
