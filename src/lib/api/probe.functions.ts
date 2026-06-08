@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { chatCompletion, getProviderApiKey, type ChatMessage } from "@/lib/ai-provider.server";
 
 const MODELS = [
   "google/gemini-2.5-flash",
@@ -27,60 +28,21 @@ export type ProbeResult = {
   temperature: number;
 };
 
-async function callOnce(args: {
-  model: string;
-  temperature: number;
-  systemPrompt: string;
-  userPrompt: string;
-  apiKey: string;
-}): Promise<{ output: string; ms: number; error?: string }> {
-  const start = Date.now();
-  const messages: { role: string; content: string }[] = [];
-  if (args.systemPrompt.trim()) messages.push({ role: "system", content: args.systemPrompt });
-  messages.push({ role: "user", content: args.userPrompt });
-
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${args.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-       model: args.model,
-        messages,
-        temperature: args.temperature,
-        max_tokens: 500,
-      })
-    });
-    const ms = Date.now() - start;
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      return { output: "", ms, error: `${res.status}: ${text.slice(0, 200) || res.statusText}` };
-    }
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const output = data.choices?.[0]?.message?.content ?? "";
-    return { output, ms };
-  } catch (e) {
-    return { output: "", ms: Date.now() - start, error: (e as Error).message };
-  }
-}
-
 export const runProbe = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data }): Promise<ProbeResult> => {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    console.log("OPENROUTER KEY FOUND:", !!process.env.OPENROUTER_API_KEY);
-    if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured.");
+    const apiKey = getProviderApiKey();
+
+    const messages: ChatMessage[] = [];
+    if (data.systemPrompt.trim()) messages.push({ role: "system", content: data.systemPrompt });
+    messages.push({ role: "user", content: data.userPrompt });
+
     // Run in parallel — each call is independent and zero-cached server-side.
     const promises = Array.from({ length: data.runs }, (_, i) =>
-      callOnce({
+      chatCompletion({
         model: data.model,
         temperature: data.temperature,
-        systemPrompt: data.systemPrompt,
-        userPrompt: data.userPrompt,
+        messages,
         apiKey,
       }).then((r) => ({ index: i + 1, ...r })),
     );
