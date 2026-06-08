@@ -37,6 +37,15 @@ function toneClasses(tone: "good" | "warn" | "bad") {
   return "border-destructive/40 bg-destructive/10 text-destructive";
 }
 
+function Meta({ label, value }: { label: string; value: string | number | undefined }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[9px] uppercase tracking-wider opacity-70">{label}</span>
+      <span className="font-mono text-foreground/90">{value ?? "—"}</span>
+    </div>
+  );
+}
+
 function TestDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
