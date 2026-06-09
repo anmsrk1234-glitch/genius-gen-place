@@ -30,9 +30,6 @@ function NewTest() {
   const [system, setSystem] = useState("");
   const [user, setUser] = useState("");
   const [runs, setRuns] = useState(3);
-  const [model, setModel] = useState<(typeof MODEL_OPTIONS)[number]["value"]>(
-    "google/gemini-2.5-flash",
-  );
   const [temperature, setTemperature] = useState(0.2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
