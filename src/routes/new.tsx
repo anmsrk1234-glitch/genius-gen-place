@@ -70,13 +70,13 @@ function NewTest() {
     setError(null);
     setLoading(true);
     track("prompt_test_started", {
-      model,
+      model: DEFAULT_MODEL,
       run_count: runs,
       prompt_length: user.length,
     });
     try {
       const result = await probe({
-        data: { systemPrompt: system, userPrompt: user, runs, model, temperature },
+        data: { systemPrompt: system, userPrompt: user, runs, model: DEFAULT_MODEL, temperature },
       });
       const outputs = result.runs.map((r) => r.output);
       const score = reliabilityScore(outputs);
