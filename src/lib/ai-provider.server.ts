@@ -52,8 +52,6 @@ export type ChatCompletionResult = {
   finishReason?: string;
   usage?: TokenUsage;
   truncated?: boolean;
-  rawUsage?: any;
-  rawResponse?: any;
 };
 
 
