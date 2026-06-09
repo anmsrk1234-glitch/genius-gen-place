@@ -45,16 +45,12 @@ function NewTest() {
       };
       if (p.system != null) setSystem(p.system);
       if (p.user != null) setUser(p.user);
-      if (p.model) setModel(p.model as typeof model);
       if (typeof p.temperature === "number") setTemperature(p.temperature);
       if (typeof p.runs === "number") setRuns(p.runs);
     } catch { /* ignore */ }
   }, []);
 
-  function onModelChange(v: typeof model) {
-    setModel(v);
-    track("model_selected", { model: v });
-  }
+
 
   function onRunsChange(v: number) {
     setRuns(v);
