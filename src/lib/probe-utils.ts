@@ -134,7 +134,10 @@ export type StoredTest = {
     finishReason?: string;
     truncated?: boolean;
     usage?: { input?: number; output?: number; total?: number };
+    rawUsage?: any;
+    rawResponse?: any;
   }[];
+
   score: number;
 };
 

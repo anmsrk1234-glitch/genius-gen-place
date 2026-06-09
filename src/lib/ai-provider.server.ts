@@ -52,7 +52,10 @@ export type ChatCompletionResult = {
   finishReason?: string;
   usage?: TokenUsage;
   truncated?: boolean;
+  rawUsage?: any;
+  rawResponse?: any;
 };
+
 
 export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCompletionResult> {
   const start = Date.now();
@@ -89,9 +92,10 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
     const usage = extractUsage(data);
     const truncated = finishReason === "length" || finishReason === "max_tokens";
     const output = extractOutput(data);
+    const rawUsage = data?.usage;
 
     if (output && output.trim()) {
-      return { output, ms, finishReason, usage, truncated };
+      return { output, ms, finishReason, usage, truncated, rawUsage, rawResponse: data };
     }
 
     // Empty output — surface the real reason, never a generic "Empty response".
@@ -103,7 +107,8 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
       (truncated && "Response was truncated before any content was produced. Increase the token limit.") ||
       (finishReason && `Provider returned no content (finish_reason: ${finishReason}).`) ||
       `Provider returned no content. Raw: ${JSON.stringify(data).slice(0, 400)}`;
-    return { output: "", ms, error: String(providerErr), finishReason, usage, truncated };
+    return { output: "", ms, error: String(providerErr), finishReason, usage, truncated, rawUsage, rawResponse: data };
+
   } catch (e) {
     return {
       output: "",
