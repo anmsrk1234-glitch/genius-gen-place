@@ -6,8 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { runProbe } from "@/lib/api/probe.functions";
 import { track } from "@/lib/analytics";
 import {
+  DEFAULT_MODEL,
   EXAMPLES,
-  MODEL_OPTIONS,
   reliabilityScore,
   saveTest,
   titleFromPrompt,
