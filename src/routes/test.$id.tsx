@@ -327,6 +327,32 @@ function TestDetail() {
                     <Meta label="Finish" value={r.finishReason ?? "—"} />
                     <Meta label="Time" value={`${r.ms} ms`} />
                   </footer>
+                  <details className="border-t border-border/60 px-4 py-2.5 text-[11px]">
+                    <summary className="cursor-pointer select-none font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                      Debug · raw AICredits response
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
+                        <Meta label="prompt_tokens" value={r.rawUsage?.prompt_tokens ?? "—"} />
+                        <Meta label="completion_tokens" value={r.rawUsage?.completion_tokens ?? "—"} />
+                        <Meta label="total_tokens" value={r.rawUsage?.total_tokens ?? "—"} />
+                        <Meta label="finish_reason" value={r.finishReason ?? "—"} />
+                      </div>
+                      <div>
+                        <p className="label-caps text-muted-foreground">Raw usage object</p>
+                        <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+{r.rawUsage ? JSON.stringify(r.rawUsage, null, 2) : "—"}
+                        </pre>
+                      </div>
+                      <div>
+                        <p className="label-caps text-muted-foreground">Raw provider response</p>
+                        <pre className="mt-1 max-h-72 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+{r.rawResponse ? JSON.stringify(r.rawResponse, null, 2) : "—"}
+                        </pre>
+                      </div>
+                    </div>
+                  </details>
+
                 </article>
               );
             })}
