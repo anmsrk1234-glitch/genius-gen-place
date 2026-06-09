@@ -19,7 +19,7 @@ const PROVIDER_CONFIG: ProviderConfig = {
 
 // Default max output tokens. Tuned for reliability over cost: we'd rather pay
 // for a complete answer than show users a truncated one.
-export const DEFAULT_MAX_TOKENS = 1000;
+export const DEFAULT_MAX_TOKENS = 2000;
 
 export function getProviderApiKey(): string {
   const key = process.env[PROVIDER_CONFIG.apiKeyEnv];
