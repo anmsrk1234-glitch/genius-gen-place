@@ -331,22 +331,42 @@ function TestDetail() {
                     <summary className="cursor-pointer select-none font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground">
                       Debug · raw AICredits response
                     </summary>
-                    <div className="mt-2 space-y-2">
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
-                        <Meta label="prompt_tokens" value={r.rawUsage?.prompt_tokens ?? "—"} />
-                        <Meta label="completion_tokens" value={r.rawUsage?.completion_tokens ?? "—"} />
-                        <Meta label="total_tokens" value={r.rawUsage?.total_tokens ?? "—"} />
-                        <Meta label="finish_reason" value={r.finishReason ?? "—"} />
-                      </div>
+                    <div className="mt-2 space-y-3">
                       <div>
-                        <p className="label-caps text-muted-foreground">Raw usage object</p>
-                        <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
-{r.rawUsage ? JSON.stringify(r.rawUsage, null, 2) : "—"}
+                        <p className="label-caps text-muted-foreground">
+                          Raw usage object (complete, unfiltered)
+                        </p>
+                        <pre className="mt-1 max-h-96 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+{r.rawUsage !== undefined ? JSON.stringify(r.rawUsage, null, 2) : "— (no usage field returned)"}
+                        </pre>
+                      </div>
+                      {r.rawUsage && typeof r.rawUsage === "object" && (
+                        <div>
+                          <p className="label-caps text-muted-foreground">All usage keys (nested expanded)</p>
+                          <div className="mt-1 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                            {Object.entries(r.rawUsage).map(([k, v]) => (
+                              <div
+                                key={k}
+                                className="flex flex-col rounded border border-border/40 bg-muted/30 px-2 py-1"
+                              >
+                                <span className="text-[9px] uppercase tracking-wider opacity-70">{k}</span>
+                                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] text-foreground/90">
+{typeof v === "object" && v !== null ? JSON.stringify(v, null, 2) : String(v)}
+                                </pre>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <p className="label-caps text-muted-foreground">finish_reason</p>
+                        <pre className="mt-1 rounded bg-muted/40 p-2 font-mono text-[10px] text-foreground/90">
+{r.finishReason ?? "—"}
                         </pre>
                       </div>
                       <div>
-                        <p className="label-caps text-muted-foreground">Raw provider response</p>
-                        <pre className="mt-1 max-h-72 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+                        <p className="label-caps text-muted-foreground">Raw provider response (full JSON)</p>
+                        <pre className="mt-1 max-h-96 overflow-auto rounded bg-muted/40 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
 {r.rawResponse ? JSON.stringify(r.rawResponse, null, 2) : "—"}
                         </pre>
                       </div>
