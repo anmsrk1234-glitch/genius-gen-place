@@ -52,7 +52,10 @@ export type ChatCompletionResult = {
   finishReason?: string;
   usage?: TokenUsage;
   truncated?: boolean;
+  rawUsage?: any;
+  rawResponse?: any;
 };
+
 
 export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCompletionResult> {
   const start = Date.now();
