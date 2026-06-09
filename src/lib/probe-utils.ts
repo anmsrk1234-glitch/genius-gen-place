@@ -1,9 +1,7 @@
 // Pure utilities — safe on client and server.
 
-export const MODEL_OPTIONS = [
-  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", hint: "Fast · default" },
-  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", hint: "Top reasoning" },
-] as const;
+export const DEFAULT_MODEL = "google/gemini-2.5-flash" as const;
+
 
 export const EXAMPLES: { name: string; system?: string; user: string }[] = [
   {
@@ -134,8 +132,6 @@ export type StoredTest = {
     finishReason?: string;
     truncated?: boolean;
     usage?: { input?: number; output?: number; total?: number };
-    rawUsage?: any;
-    rawResponse?: any;
   }[];
 
   score: number;

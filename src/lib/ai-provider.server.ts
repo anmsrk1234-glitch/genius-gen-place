@@ -19,7 +19,7 @@ const PROVIDER_CONFIG: ProviderConfig = {
 
 // Default max output tokens. Tuned for reliability over cost: we'd rather pay
 // for a complete answer than show users a truncated one.
-export const DEFAULT_MAX_TOKENS = 1000;
+export const DEFAULT_MAX_TOKENS = 2000;
 
 export function getProviderApiKey(): string {
   const key = process.env[PROVIDER_CONFIG.apiKeyEnv];
@@ -52,8 +52,6 @@ export type ChatCompletionResult = {
   finishReason?: string;
   usage?: TokenUsage;
   truncated?: boolean;
-  rawUsage?: any;
-  rawResponse?: any;
 };
 
 
@@ -92,10 +90,9 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
     const usage = extractUsage(data);
     const truncated = finishReason === "length" || finishReason === "max_tokens";
     const output = extractOutput(data);
-    const rawUsage = data?.usage;
 
     if (output && output.trim()) {
-      return { output, ms, finishReason, usage, truncated, rawUsage, rawResponse: data };
+      return { output, ms, finishReason, usage, truncated };
     }
 
     // Empty output — surface the real reason, never a generic "Empty response".
@@ -107,7 +104,7 @@ export async function chatCompletion(input: ChatCompletionInput): Promise<ChatCo
       (truncated && "Response was truncated before any content was produced. Increase the token limit.") ||
       (finishReason && `Provider returned no content (finish_reason: ${finishReason}).`) ||
       `Provider returned no content. Raw: ${JSON.stringify(data).slice(0, 400)}`;
-    return { output: "", ms, error: String(providerErr), finishReason, usage, truncated, rawUsage, rawResponse: data };
+    return { output: "", ms, error: String(providerErr), finishReason, usage, truncated };
 
   } catch (e) {
     return {

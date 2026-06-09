@@ -6,8 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { runProbe } from "@/lib/api/probe.functions";
 import { track } from "@/lib/analytics";
 import {
+  DEFAULT_MODEL,
   EXAMPLES,
-  MODEL_OPTIONS,
   reliabilityScore,
   saveTest,
   titleFromPrompt,
@@ -30,9 +30,6 @@ function NewTest() {
   const [system, setSystem] = useState("");
   const [user, setUser] = useState("");
   const [runs, setRuns] = useState(3);
-  const [model, setModel] = useState<(typeof MODEL_OPTIONS)[number]["value"]>(
-    "google/gemini-2.5-flash",
-  );
   const [temperature, setTemperature] = useState(0.2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,16 +45,12 @@ function NewTest() {
       };
       if (p.system != null) setSystem(p.system);
       if (p.user != null) setUser(p.user);
-      if (p.model) setModel(p.model as typeof model);
       if (typeof p.temperature === "number") setTemperature(p.temperature);
       if (typeof p.runs === "number") setRuns(p.runs);
     } catch { /* ignore */ }
   }, []);
 
-  function onModelChange(v: typeof model) {
-    setModel(v);
-    track("model_selected", { model: v });
-  }
+
 
   function onRunsChange(v: number) {
     setRuns(v);
@@ -77,13 +70,13 @@ function NewTest() {
     setError(null);
     setLoading(true);
     track("prompt_test_started", {
-      model,
+      model: DEFAULT_MODEL,
       run_count: runs,
       prompt_length: user.length,
     });
     try {
       const result = await probe({
-        data: { systemPrompt: system, userPrompt: user, runs, model, temperature },
+        data: { systemPrompt: system, userPrompt: user, runs, model: DEFAULT_MODEL, temperature },
       });
       const outputs = result.runs.map((r) => r.output);
       const score = reliabilityScore(outputs);
@@ -190,43 +183,24 @@ function NewTest() {
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-sm font-semibold text-foreground" htmlFor="model">
-                  Model
-                </label>
-                <select
-                  id="model"
-                  value={model}
-                  onChange={(e) => onModelChange(e.target.value as typeof model)}
-                  className="mt-2 w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
-                >
-                  {MODEL_OPTIONS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label} — {m.hint}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="flex items-baseline justify-between text-sm font-semibold text-foreground" htmlFor="temp">
-                  Temperature
-                  <span className="font-mono text-primary">{temperature.toFixed(1)}</span>
-                </label>
-                <input
-                  id="temp"
-                  type="range"
-                  min={0}
-                  max={2}
-                  step={0.1}
-                  value={temperature}
-                  onChange={(e) => setTemperature(Number(e.target.value))}
-                  className="mt-3 w-full accent-[oklch(0.72_0.19_295)]"
-                />
-                <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <span>0 — deterministic</span>
-                  <span>2 — wild</span>
-                </div>
+            <div>
+              <label className="flex items-baseline justify-between text-sm font-semibold text-foreground" htmlFor="temp">
+                Temperature
+                <span className="font-mono text-primary">{temperature.toFixed(1)}</span>
+              </label>
+              <input
+                id="temp"
+                type="range"
+                min={0}
+                max={2}
+                step={0.1}
+                value={temperature}
+                onChange={(e) => setTemperature(Number(e.target.value))}
+                className="mt-3 w-full accent-[oklch(0.72_0.19_295)]"
+              />
+              <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>0 — deterministic</span>
+                <span>2 — wild</span>
               </div>
             </div>
 
