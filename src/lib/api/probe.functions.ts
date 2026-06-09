@@ -2,10 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { chatCompletion, getProviderApiKey, type ChatMessage } from "@/lib/ai-provider.server";
 
-const MODELS = [
-  "google/gemini-2.5-flash",
-  "google/gemini-2.5-pro",
-] as const;
+const MODELS = ["google/gemini-2.5-flash"] as const;
 
 const inputSchema = z.object({
   systemPrompt: z.string().max(8000).optional().default(""),
@@ -23,8 +20,6 @@ export type ProbeRun = {
   finishReason?: string;
   truncated?: boolean;
   usage?: { input?: number; output?: number; total?: number };
-  rawUsage?: any;
-  rawResponse?: any;
 };
 
 
