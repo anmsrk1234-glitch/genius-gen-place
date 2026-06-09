@@ -23,7 +23,10 @@ export type ProbeRun = {
   finishReason?: string;
   truncated?: boolean;
   usage?: { input?: number; output?: number; total?: number };
+  rawUsage?: any;
+  rawResponse?: any;
 };
+
 
 export type ProbeResult = {
   runs: ProbeRun[];
