@@ -1,6 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
+import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown, Wand2 } from "lucide-react";
+
+const EXAMPLE_PREFILL = {
+  system: "",
+  user: `You are approving refunds.
+
+Rules:
+- Deny if the purchase was made more than 30 days ago.
+- Otherwise approve.
+
+Customer:
+Purchased 14 days ago.
+Has not requested a refund before.
+
+Return ONLY:
+APPROVE
+or
+DENY`,
+  temperature: 0.2,
+  runs: 3,
+};
 import { SiteHeader } from "@/components/site-header";
 import logoUrl from "@/assets/promptprobe-logo.png";
 import { track } from "@/lib/analytics";
@@ -26,9 +46,18 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate();
   useEffect(() => {
     track("page_view");
   }, []);
+
+  function tryExample() {
+    try {
+      sessionStorage.setItem("promptprobe.prefill", JSON.stringify(EXAMPLE_PREFILL));
+    } catch { /* ignore */ }
+    navigate({ to: "/new" });
+  }
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -46,16 +75,27 @@ function Index() {
             your automation or ships inconsistent responses.
           </p>
           <div className="mt-5 md:mt-8 flex flex-col items-center gap-3">
-            <Link
-              to="/new"
-              className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition hover:brightness-110"
-            >
-              Test your first prompt
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </Link>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <Link
+                to="/new"
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition hover:brightness-110"
+              >
+                Test your first prompt
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={tryExample}
+                className="group inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-card/70 px-6 py-3.5 text-base font-semibold text-foreground backdrop-blur transition hover:border-primary/70 hover:bg-accent/60"
+              >
+                <Wand2 className="h-4 w-4 text-primary" />
+                Try an Example
+              </button>
+            </div>
             <p className="text-xs text-muted-foreground">~30 seconds. No setup required.</p>
           </div>
         </section>
+
 
         <section className="mt-24">
           <p className="label-caps text-center text-muted-foreground">How it works</p>
