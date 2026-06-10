@@ -55,7 +55,6 @@ function Index() {
     try {
       sessionStorage.setItem("promptprobe.prefill", JSON.stringify(EXAMPLE_PREFILL));
     } catch { /* ignore */ }
-    track("example_loaded", { source: "homepage" });
     navigate({ to: "/new" });
   }
 
