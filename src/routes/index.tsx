@@ -1,6 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
+import { ArrowRight, Repeat2, Sparkles, GitCompareArrows, ShieldCheck, AlertTriangle, TrendingDown, Wand2 } from "lucide-react";
+
+const EXAMPLE_PREFILL = {
+  system: "",
+  user: `You are approving refunds.
+
+Rules:
+- Deny if the purchase was made more than 30 days ago.
+- Otherwise approve.
+
+Customer:
+Purchased 14 days ago.
+Has not requested a refund before.
+
+Return ONLY:
+APPROVE
+or
+DENY`,
+  temperature: 0.2,
+  runs: 3,
+};
 import { SiteHeader } from "@/components/site-header";
 import logoUrl from "@/assets/promptprobe-logo.png";
 import { track } from "@/lib/analytics";
