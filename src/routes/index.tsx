@@ -46,9 +46,19 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate();
   useEffect(() => {
     track("page_view");
   }, []);
+
+  function tryExample() {
+    try {
+      sessionStorage.setItem("promptprobe.prefill", JSON.stringify(EXAMPLE_PREFILL));
+    } catch { /* ignore */ }
+    track("example_loaded", { source: "homepage" });
+    navigate({ to: "/new" });
+  }
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -66,16 +76,27 @@ function Index() {
             your automation or ships inconsistent responses.
           </p>
           <div className="mt-5 md:mt-8 flex flex-col items-center gap-3">
-            <Link
-              to="/new"
-              className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition hover:brightness-110"
-            >
-              Test your first prompt
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </Link>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <Link
+                to="/new"
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow transition hover:brightness-110"
+              >
+                Test your first prompt
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={tryExample}
+                className="group inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-card/70 px-6 py-3.5 text-base font-semibold text-foreground backdrop-blur transition hover:border-primary/70 hover:bg-accent/60"
+              >
+                <Wand2 className="h-4 w-4 text-primary" />
+                Try an Example
+              </button>
+            </div>
             <p className="text-xs text-muted-foreground">~30 seconds. No setup required.</p>
           </div>
         </section>
+
 
         <section className="mt-24">
           <p className="label-caps text-center text-muted-foreground">How it works</p>
